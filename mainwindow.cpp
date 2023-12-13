@@ -5,7 +5,7 @@
 #include <windows.h>
 #include <fstream>
 #include <sstream>
-
+#include <Qdir>
 QString path;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -25,6 +25,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushButton_clicked()
 {
+
     // Check if the path is not empty before changing the directory
     if (!path.isEmpty()) {
         // Convert QString to std::string and then to C-style string
@@ -35,9 +36,13 @@ void MainWindow::on_pushButton_clicked()
         if (_chdir(cPath) == 0) {
             std::cout << "Changed directory to: " << cPath << std::endl;
             _chdir("tf");
-
+            if(_chdir("cfg") == 0){
+            changeAutoExec();
+            } else {
+                std::cerr << "Error changing directory: " << strerror(errno) << std::endl;
+            }
             if(_chdir("custom") == 0){
-                changeAutoExec();
+
                 newDirectories();
                 copyFiles();
             } else {
@@ -64,15 +69,39 @@ void newDirectories(){
 }
 // Download files to directory
 
-void copyFiles(){
-    const wchar_t* sourceFilePath = "Path to executable";
-    const wchar_t* sourceDestinationFilePath = L"where i am in thumbnails.";
+void copyFiles(char * cwd){
+    wchar_t sourceFilePath[MAX_PATH];
+    wchar_t destinationFilePath[MAX_PATH];
 
-    if (copyFile(sourceFilePath, (sourceDestinationFilePath + L"file.txt").c_str(), FALSE)){
-        //sucess
-    } else {
-        //error.
+    if (GetModuleFileName(nullptr, sourceFilePath, MAX_PATH) == 0) {
+        std::cerr << "Error getting the path of the executable." << std::endl;
+        return;
     }
+
+    QStringList directoriesToAdd;
+    directoriesToAdd << "transparent" << "materials" << "VGUI" << "replay" << "thumbnails";
+
+    QString qPath = path;
+
+    // Use QDir to handle directory separators
+    QDir dir(qPath);
+
+    for (const QString& directory : directoriesToAdd) {
+        dir.cd(directory);
+    }
+
+    const wchar_t* wcharPath = reinterpret_cast<const wchar_t*>(qPath.utf16());
+
+    // Use QDir toNativeSeparators for correct directory separators
+    wcscpy(destinationFilePath, reinterpret_cast<const wchar_t*>(QDir::toNativeSeparators(dir.absolutePath()).utf16()));
+    wcscat(destinationFilePath, L"file.txt");
+
+    // Then copy files into file.
+    // if (copyFile(sourceFilePath, destinationFilePath, FALSE)) {
+    //     // success
+    // } else {
+    //     // error
+    // }
 }
 
 //
