@@ -6,6 +6,8 @@
 #include <fstream>
 #include <sstream>
 #include <Qdir>
+
+
 QString path;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -37,18 +39,20 @@ void MainWindow::on_pushButton_clicked()
             std::cout << "Changed directory to: " << cPath << std::endl;
             _chdir("tf");
             if(_chdir("cfg") == 0){
-            changeAutoExec();
+                changeAutoExec();
+                std::cout << "Changed into cfg";
+                _chdir("..");
             } else {
                 std::cerr << "Error changing directory: " << strerror(errno) << std::endl;
             }
             if(_chdir("custom") == 0){
-
                 newDirectories();
                 copyFiles();
+                std::cout << "Changed into custom";
             } else {
                 _mkdir("custom");
                 newDirectories();
-                copyFiles();
+                //copyFiles();
             }
         } else {
             std::cerr << "Error changing directory: " << strerror(errno) << std::endl;
@@ -60,24 +64,20 @@ void MainWindow::on_pushButton_clicked()
 
 
 //create new directory.
-void newDirectories(){
+void MainWindow::newDirectories(){
     _mkdir("transparent");
+    _chdir("transparent");
     _mkdir("materials");
+    _chdir("materials");
     _mkdir("VGUI");
+    _chdir("VGUI");
     _mkdir("replay");
+    _chdir("replay");
     _mkdir("thumbnails");
+    _chdir("thumbnails");
 }
 // Download files to directory
-
-void copyFiles(char * cwd){
-    wchar_t sourceFilePath[MAX_PATH];
-    wchar_t destinationFilePath[MAX_PATH];
-
-    if (GetModuleFileName(nullptr, sourceFilePath, MAX_PATH) == 0) {
-        std::cerr << "Error getting the path of the executable." << std::endl;
-        return;
-    }
-
+QString MainWindow::getNewDirectory(){
     QStringList directoriesToAdd;
     directoriesToAdd << "transparent" << "materials" << "VGUI" << "replay" << "thumbnails";
 
@@ -90,19 +90,34 @@ void copyFiles(char * cwd){
         dir.cd(directory);
     }
 
-    const wchar_t* wcharPath = reinterpret_cast<const wchar_t*>(qPath.utf16());
-
-    // Use QDir toNativeSeparators for correct directory separators
-    wcscpy(destinationFilePath, reinterpret_cast<const wchar_t*>(QDir::toNativeSeparators(dir.absolutePath()).utf16()));
-    wcscat(destinationFilePath, L"file.txt");
-
-    // Then copy files into file.
-    // if (copyFile(sourceFilePath, destinationFilePath, FALSE)) {
-    //     // success
-    // } else {
-    //     // error
-    // }
+    return dir.absolutePath();
 }
+
+
+void MainWindow::copyFiles(){
+    wchar_t sourceFilePath[MAX_PATH];
+    wchar_t destinationFilePath[MAX_PATH];
+
+    QString qDestination = getNewDirectory();
+    qDestination.toWCharArray(destinationFilePath);
+
+    if (GetModuleFileName(nullptr, sourceFilePath, MAX_PATH) == 0) {
+        std::cerr << "Error getting the path of the executable." << std::endl;
+        return;
+    }
+
+    std::ifstream sourceFile(sourceFilePath, std::ios::binary);
+    std::wofstream destinationFile(destinationFilePath, std::ios::binary);\
+
+        if(sourceFile && destinationFile){
+        destinationFile << sourceFile.rdbuf();
+            std::wcout << "File copied success" << std::endl;
+        } else {
+            std::wcout << "Failed to copy" << std::endl;
+        }
+
+   }
+
 
 //
 
@@ -112,7 +127,7 @@ void changeHudLayoutRes(){
 
 }
 
-void changeAutoExec(){
+void MainWindow::changeAutoExec(){
     const char* fileName = "autoexec.cfg";
     //find autoexec in custom
     if(_chdir("custom") == 0){

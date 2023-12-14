@@ -16,18 +16,19 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
-private slots:
-    void on_pushButton_clicked();
-
-    void on_lineEdit_textChanged(const QString &arg1);
-
     void newDirectories();
 
     void copyFiles();
 
     void changeAutoExec();
 
+    QString getNewDirectory();
+
+
+private slots:
+    void on_pushButton_clicked();
+
+    void on_lineEdit_textChanged(const QString &arg1);
 private:
     Ui::MainWindow *ui;
 };
