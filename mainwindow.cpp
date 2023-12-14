@@ -6,6 +6,8 @@
 #include <fstream>
 #include <sstream>
 #include <Qdir>
+#include <QString>
+#include <ostream>
 
 
 QString path;
@@ -27,7 +29,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushButton_clicked()
 {
-
     // Check if the path is not empty before changing the directory
     if (!path.isEmpty()) {
         // Convert QString to std::string and then to C-style string
@@ -36,23 +37,34 @@ void MainWindow::on_pushButton_clicked()
 
         // Change the current working directory
         if (_chdir(cPath) == 0) {
-            std::cout << "Changed directory to: " << cPath << std::endl;
+            //In tf2 folder
             _chdir("tf");
+            //in tf folder
             if(_chdir("cfg") == 0){
+                //in cfg folder
                 changeAutoExec();
-                std::cout << "Changed into cfg";
-                _chdir("..");
+                if(_chdir("..")==0){
+
+                } else {
+                    std::cout << "Not going back a directory" << std::endl;
+                }
+                //back to tf
             } else {
                 std::cerr << "Error changing directory: " << strerror(errno) << std::endl;
             }
+
             if(_chdir("custom") == 0){
                 newDirectories();
                 copyFiles();
-                std::cout << "Changed into custom";
+                //this isnt getting called but should be called when we get out of cfg. So creating custom folder with new directories.
             } else {
                 _mkdir("custom");
-                newDirectories();
-                //copyFiles();
+                if(chdir("custom") == 0){
+                    newDirectories();
+                    copyFiles();
+                } else {
+                    std::cout << "Something is fucked" << std::endl;
+                }
             }
         } else {
             std::cerr << "Error changing directory: " << strerror(errno) << std::endl;
@@ -79,24 +91,46 @@ void MainWindow::newDirectories(){
 // Download files to directory
 QString MainWindow::getNewDirectory(){
     QStringList directoriesToAdd;
-    directoriesToAdd << "transparent" << "materials" << "VGUI" << "replay" << "thumbnails";
+    directoriesToAdd << "tf" << "custom" << "transparent" << "materials" << "VGUI" << "replay" << "thumbnails";
 
     QString qPath = path;
 
     // Use QDir to handle directory separators
     QDir dir(qPath);
-
     for (const QString& directory : directoriesToAdd) {
+        qPath = dir.filePath(directory);
         dir.cd(directory);
     }
 
-    return dir.absolutePath();
+    std::wcout << qPath.toStdWString();
+    return qPath;
 }
 
 
 void MainWindow::copyFiles(){
     wchar_t sourceFilePath[MAX_PATH];
     wchar_t destinationFilePath[MAX_PATH];
+    wchar_t fileOnePath[MAX_PATH];
+    wchar_t fileTwoPath[MAX_PATH];
+
+    QString sourcePath = getSourcePath();
+    QString filePathOne = QDir::cleanPath(sourcePath + "/REFRACTnormal_transparent.vmt");
+    QString filePathTwo = QDir::cleanPath(sourcePath + "/REFRACTnormal_transparent.vtf");
+
+
+    std::wstring fileOne = filePathOne.toStdWString();
+    if (wcsncpy(fileOnePath, fileOne.c_str(), MAX_PATH) == nullptr) {
+        return;
+    }
+
+
+    std::wstring fileTwo = filePathTwo.toStdWString();
+    if (wcsncpy(fileTwoPath, fileTwo.c_str(), MAX_PATH) == nullptr) {
+        return;
+    }
+
+    std::cout << filePathOne.toStdString() << std::endl;
+    std::cout << filePathTwo.toStdString() << std::endl;
 
     QString qDestination = getNewDirectory();
     qDestination.toWCharArray(destinationFilePath);
@@ -106,16 +140,39 @@ void MainWindow::copyFiles(){
         return;
     }
 
-    std::ifstream sourceFile(sourceFilePath, std::ios::binary);
-    std::wofstream destinationFile(destinationFilePath, std::ios::binary);\
+    // Copy fileOnePath
+    std::ifstream sourceFileOne(fileOnePath, std::ios::binary);
+    std::wofstream destinationFileOne(destinationFilePath, std::ios::binary);
+    std::wcout << "Destination Directory: " << qDestination.toStdWString() << std::endl;
 
-        if(sourceFile && destinationFile){
-        destinationFile << sourceFile.rdbuf();
-            std::wcout << "File copied success" << std::endl;
-        } else {
-            std::wcout << "Failed to copy" << std::endl;
-        }
+    if (sourceFileOne && destinationFileOne) {
+        destinationFileOne << sourceFileOne.rdbuf();
+        std::wcout << "File One copied successfully" << std::endl;
+    } else {
+        std::wcout << "Failed to copy File One" << std::endl;
+    }
 
+    // Copy fileTwoPath
+    std::ifstream sourceFileTwo(fileTwoPath, std::ios::binary);
+    std::wofstream destinationFileTwo(destinationFilePath, std::ios::binary | std::ios::app); // Use append mode for the second file
+
+    if (sourceFileTwo && destinationFileTwo) {
+        destinationFileTwo << sourceFileTwo.rdbuf();
+        std::wcout << "File Two copied successfully" << std::endl;
+    } else {
+        std::wcout << "Failed to copy File Two" << std::endl;
+    }
+
+    if (!sourceFileOne.is_open()) {
+        std::wcerr << "Error opening source file One for reading." << std::endl;
+        return;
+    }
+
+    if (!destinationFileOne.is_open()) {
+        std::wcerr << "Error opening destination file One for writing." << std::endl;
+        sourceFileOne.close();
+        return;
+    }
    }
 
 
