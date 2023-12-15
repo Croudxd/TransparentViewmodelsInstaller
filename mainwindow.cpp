@@ -30,52 +30,67 @@ MainWindow::~MainWindow()
 void MainWindow::on_pushButton_clicked()
 {
     // Check if the path is not empty before changing the directory
-    if (!path.isEmpty()) {
+    if (!path.isEmpty())
+    {
         // Convert QString to std::string and then to C-style string
         std::string sPath = path.toStdString();
         const char* cPath = sPath.c_str();
 
         // Change the current working directory
-        if (_chdir(cPath) == 0) {
+        if (_chdir(cPath) == 0)
+        {
             //In tf2 folder
             _chdir("tf");
             //in tf folder
-            if(_chdir("cfg") == 0){
+            if(_chdir("cfg") == 0)
+            {
                 //in cfg folder
                 changeAutoExec();
-                if(_chdir("..")==0){
+                if(_chdir("..")==0)
+                {
 
-                } else {
+                } else
+                {
                     std::cout << "Not going back a directory" << std::endl;
                 }
                 //back to tf
-            } else {
+            } else
+            {
                 std::cerr << "Error changing directory: " << strerror(errno) << std::endl;
             }
-
-            if(_chdir("custom") == 0){
+            if(_chdir("custom") == 0)
+                //change into custom folder.
+            {
                 newDirectories();
+                //creates new directories, cd into all of them leaving working directory in thumbnails.
                 copyFiles();
-                //this isnt getting called but should be called when we get out of cfg. So creating custom folder with new directories.
-            } else {
+                //copysFiles into this folder.
+            } else
+            {
                 _mkdir("custom");
-                if(chdir("custom") == 0){
+                //if cant open custom create custom folder.
+                if(chdir("custom") == 0)
+                {
                     newDirectories();
                     copyFiles();
-                } else {
+                } else
+                {
                     std::cout << "Something is fucked" << std::endl;
                 }
             }
-        } else {
+        } else
+        {
             std::cerr << "Error changing directory: " << strerror(errno) << std::endl;
         }
-    } else {
+    }
+    else
+    {
         std::cerr << "Path is empty." << std::endl;
     }
 }
 
 
-//create new directory.
+//create new directory. cd into all of them leaving cwd in thumbnails.
 void MainWindow::newDirectories(){
     _mkdir("transparent");
     _chdir("transparent");
@@ -88,7 +103,9 @@ void MainWindow::newDirectories(){
     _mkdir("thumbnails");
     _chdir("thumbnails");
 }
-// Download files to directory
+
+
+//This adds to path entered by user, will then add folders it needs to copy files into. returning path.
 QString MainWindow::getNewDirectory(){
     QStringList directoriesToAdd;
     directoriesToAdd << "tf" << "custom" << "transparent" << "materials" << "VGUI" << "replay" << "thumbnails";
@@ -97,7 +114,8 @@ QString MainWindow::getNewDirectory(){
 
     // Use QDir to handle directory separators
     QDir dir(qPath);
-    for (const QString& directory : directoriesToAdd) {
+    for (const QString& directory : directoriesToAdd)
+    {
         qPath = dir.filePath(directory);
         dir.cd(directory);
     }
@@ -106,8 +124,9 @@ QString MainWindow::getNewDirectory(){
     return qPath;
 }
 
-
-void MainWindow::copyFiles(){
+//copies files from current source path to new destination source path (thumbnails folder).
+void MainWindow::copyFiles()
+{
     wchar_t sourceFilePath[MAX_PATH];
     wchar_t destinationFilePath[MAX_PATH];
     wchar_t fileOnePath[MAX_PATH];
@@ -119,13 +138,15 @@ void MainWindow::copyFiles(){
 
 
     std::wstring fileOne = filePathOne.toStdWString();
-    if (wcsncpy(fileOnePath, fileOne.c_str(), MAX_PATH) == nullptr) {
+    if (wcsncpy(fileOnePath, fileOne.c_str(), MAX_PATH) == nullptr)
+    {
         return;
     }
 
 
     std::wstring fileTwo = filePathTwo.toStdWString();
-    if (wcsncpy(fileTwoPath, fileTwo.c_str(), MAX_PATH) == nullptr) {
+    if (wcsncpy(fileTwoPath, fileTwo.c_str(), MAX_PATH) == nullptr)
+    {
         return;
     }
 
@@ -135,7 +156,8 @@ void MainWindow::copyFiles(){
     QString qDestination = getNewDirectory();
     qDestination.toWCharArray(destinationFilePath);
 
-    if (GetModuleFileName(nullptr, sourceFilePath, MAX_PATH) == 0) {
+    if (GetModuleFileName(nullptr, sourceFilePath, MAX_PATH) == 0)
+    {
         std::cerr << "Error getting the path of the executable." << std::endl;
         return;
     }
@@ -145,7 +167,8 @@ void MainWindow::copyFiles(){
     std::wofstream destinationFileOne(destinationFilePath, std::ios::binary);
     std::wcout << "Destination Directory: " << qDestination.toStdWString() << std::endl;
 
-    if (sourceFileOne && destinationFileOne) {
+    if (sourceFileOne && destinationFileOne)
+    {
         destinationFileOne << sourceFileOne.rdbuf();
         std::wcout << "File One copied successfully" << std::endl;
     } else {
@@ -156,19 +179,23 @@ void MainWindow::copyFiles(){
     std::ifstream sourceFileTwo(fileTwoPath, std::ios::binary);
     std::wofstream destinationFileTwo(destinationFilePath, std::ios::binary | std::ios::app); // Use append mode for the second file
 
-    if (sourceFileTwo && destinationFileTwo) {
+    if (sourceFileTwo && destinationFileTwo)
+    {
         destinationFileTwo << sourceFileTwo.rdbuf();
         std::wcout << "File Two copied successfully" << std::endl;
-    } else {
+    } else
+    {
         std::wcout << "Failed to copy File Two" << std::endl;
     }
 
-    if (!sourceFileOne.is_open()) {
+    if (!sourceFileOne.is_open())
+    {
         std::wcerr << "Error opening source file One for reading." << std::endl;
         return;
     }
 
-    if (!destinationFileOne.is_open()) {
+    if (!destinationFileOne.is_open())
+    {
         std::wcerr << "Error opening destination file One for writing." << std::endl;
         sourceFileOne.close();
         return;
@@ -176,26 +203,31 @@ void MainWindow::copyFiles(){
    }
 
 
-//
 
-void changeHudLayoutRes(){
+
+void changeHudLayoutRes()
+{
     //go through all custom folders and find hudlayout.res
     //change file to include commands.
-
 }
 
-void MainWindow::changeAutoExec(){
+//finds file called autoexec, adds commands to the file. If not one there will create one.
+void MainWindow::changeAutoExec()
+{
     const char* fileName = "autoexec.cfg";
     //find autoexec in custom
-    if(_chdir("custom") == 0){
+    if(_chdir("custom") == 0)
+    {
         std::ofstream outFile(fileName);
-        if(outFile.is_open()){
+        if(outFile.is_open())
+        {
             //change autoexec/add commands.
         }
     } else {
         _mkdir("custom");
         std::ifstream inFile(fileName);
-        if(inFile.is_open()){
+        if(inFile.is_open())
+        {
             std::stringstream buffer;
             buffer << inFile.rdbuf();
             std::string content = buffer.str();
@@ -208,14 +240,17 @@ void MainWindow::changeAutoExec(){
             content += "mat_colorcorrection 0";
             inFile.close();
             std::ofstream outFile(fileName);
-            if (outFile.is_open()) {
+            if (outFile.is_open())
+            {
                 outFile << content;
 
                 std::cout << "Settings added to autoexec.cfg." << std::endl;
-            } else {
+            } else
+            {
                 std::cerr << "Error opening autoexec.cfg for writing." << std::endl;
             }
-        } else {
+        } else
+        {
             std::cerr << "Error opening autoexec.cfg for reading." << std::endl;
         }
     }
@@ -224,6 +259,7 @@ void MainWindow::changeAutoExec(){
 
 void MainWindow::on_lineEdit_textChanged(const QString &arg1)
 {
+    //gets path from user.
     path = arg1;
 
 }
