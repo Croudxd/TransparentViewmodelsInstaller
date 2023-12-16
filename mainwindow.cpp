@@ -187,7 +187,7 @@ void MainWindow::copyFiles()
 
     // Copy fileOnePath
     std::ifstream sourceFileOne(fileOnePath, std::ios::binary);
-    std::wofstream destinationFileOne(destinationFilePathOne, std::ios::binary);
+    std::ofstream destinationFileOne(destinationFilePathOne, std::ios::binary);
     std::wcout << "Destination Directory One: " << qDestinationOne.toStdWString() << std::endl;
 
     if (sourceFileOne && destinationFileOne)
@@ -211,18 +211,24 @@ void MainWindow::copyFiles()
         std::wcout << "Failed to copy File Two" << std::endl;
     }
 
-    if (!sourceFileOne.is_open())
+    if (sourceFileOne.fail() || destinationFileOne.fail())
     {
         std::wcerr << "Error opening source file One for reading." << std::endl;
         return;
     }
 
-    if (!destinationFileOne.is_open())
+    if (sourceFileTwo.fail() || destinationFileTwo.fail())
     {
         std::wcerr << "Error opening destination file One for writing." << std::endl;
-        sourceFileOne.close();
+
         return;
     }
+
+    sourceFileOne.close();
+    sourceFileTwo.close();
+    sourceFileTwo.close();
+    destinationFileOne.close();
+    destinationFileTwo.close();
    }
 
 
@@ -239,15 +245,12 @@ void MainWindow::changeAutoExec()
 {
     const char* fileName = "autoexec.cfg";
     //find autoexec in custom
-    if(_chdir("custom") == 0)
-    {
+
         std::ofstream outFile(fileName);
         if(outFile.is_open())
         {
             //change autoexec/add commands.
         }
-    } else {
-        _mkdir("custom");
         std::ifstream inFile(fileName);
         if(inFile.is_open())
         {
@@ -277,7 +280,7 @@ void MainWindow::changeAutoExec()
             std::cerr << "Error opening autoexec.cfg for reading." << std::endl;
         }
     }
- }
+
 
 
 void MainWindow::on_lineEdit_textChanged(const QString &arg1)
