@@ -5,9 +5,14 @@
 #include <windows.h>
 #include <fstream>
 #include <sstream>
-#include <Qdir>
+#include <QDir>
 #include <QString>
 #include <ostream>
+#include <string.h>
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
 
 
 QString path;
@@ -61,6 +66,18 @@ void MainWindow::on_pushButton_clicked()
             if(_chdir("custom") == 0)
                 //change into custom folder.
             {
+                char* buffer;
+
+                // Get the current working directory:
+                if ( (buffer = _getcwd( NULL, 0 )) == NULL )
+                    perror( "_getcwd error" );
+                else
+                {
+                    printf( "%s \nLength: %zu\n", buffer, strlen(buffer) );
+                    free(buffer);
+                }
+
+                changeHudLayoutRes(buffer);
                 newDirectories();
                 //creates new directories, cd into all of them leaving working directory in thumbnails.
                 copyFiles();
@@ -231,12 +248,31 @@ void MainWindow::copyFiles()
     destinationFileTwo.close();
    }
 
-
-
-
-void changeHudLayoutRes()
+std::vector<std::string> MainWindow::listAllFiles(QString path)
 {
-    //go through all custom folders and find hudlayout.res
+        std::vector<std::string> names;
+        std::string sPath = path.toStdString();
+        for (const auto &entry : fs::directory_iterator(sPath)){
+            std::string fileName = entry.path().string();
+            names.push_back(fileName);
+            }
+    return names;
+}
+
+
+
+   void MainWindow::changeHudLayoutRes(QString path)
+{
+    //in custom, need to create a method to go through all the files and find hudlayout.res
+    std::vector<std::string> names;
+    names = listAllFiles(path);
+    for (std::string fileName : names){
+        if(fileName == "hudlayout.res"){
+            //edit hudlayoutres file.
+        } else {
+            //need to install hud.
+        }
+    }
     //change file to include commands.
 }
 

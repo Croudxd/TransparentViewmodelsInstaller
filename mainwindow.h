@@ -28,6 +28,10 @@ public:
 
     QString getNewDirectoryTwo();
 
+    void changeHudLayoutRes(QString path);
+
+    std::vector<std::string> listAllFiles(QString path);
+
 
 private slots:
     void on_pushButton_clicked();
