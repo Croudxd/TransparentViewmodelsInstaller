@@ -269,6 +269,7 @@ std::vector<std::string> MainWindow::listAllFiles(QString path)
     for (std::string fileName : names){
         if(fileName == "hudlayout.res"){
             //edit hudlayoutres file.
+
         } else {
             //need to install hud.
         }
