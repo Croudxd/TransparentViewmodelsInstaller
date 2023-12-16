@@ -108,7 +108,25 @@ void MainWindow::newDirectories(){
 //This adds to path entered by user, will then add folders it needs to copy files into. returning path.
 QString MainWindow::getNewDirectory(){
     QStringList directoriesToAdd;
-    directoriesToAdd << "tf" << "custom" << "transparent" << "materials" << "VGUI" << "replay" << "thumbnails";
+    directoriesToAdd << "tf" << "custom" << "transparent" << "materials" << "VGUI" << "replay" << "thumbnails" << "REFRACTnormal_transparent.vmt";
+
+    QString qPath = path;
+
+    // Use QDir to handle directory separators
+    QDir dir(qPath);
+    for (const QString& directory : directoriesToAdd)
+    {
+        qPath = dir.filePath(directory);
+        dir.cd(directory);
+    }
+
+    std::wcout << qPath.toStdWString();
+    return qPath;
+}
+
+QString MainWindow::getNewDirectoryTwo(){
+    QStringList directoriesToAdd;
+    directoriesToAdd << "tf" << "custom" << "transparent" << "materials" << "VGUI" << "replay" << "thumbnails" <<  "REFRACTnormal_transparent.vtf";
 
     QString qPath = path;
 
@@ -128,7 +146,9 @@ QString MainWindow::getNewDirectory(){
 void MainWindow::copyFiles()
 {
     wchar_t sourceFilePath[MAX_PATH];
-    wchar_t destinationFilePath[MAX_PATH];
+    wchar_t destinationFilePathOne[MAX_PATH];
+    wchar_t destinationFilePathTwo[MAX_PATH];
+
     wchar_t fileOnePath[MAX_PATH];
     wchar_t fileTwoPath[MAX_PATH];
 
@@ -153,8 +173,11 @@ void MainWindow::copyFiles()
     std::cout << filePathOne.toStdString() << std::endl;
     std::cout << filePathTwo.toStdString() << std::endl;
 
-    QString qDestination = getNewDirectory();
-    qDestination.toWCharArray(destinationFilePath);
+    QString qDestinationOne = getNewDirectory();
+    QString qDestinationTwo = getNewDirectoryTwo();
+    qDestinationOne.toWCharArray(destinationFilePathOne);
+    qDestinationTwo.toWCharArray(destinationFilePathTwo);
+
 
     if (GetModuleFileName(nullptr, sourceFilePath, MAX_PATH) == 0)
     {
@@ -164,8 +187,8 @@ void MainWindow::copyFiles()
 
     // Copy fileOnePath
     std::ifstream sourceFileOne(fileOnePath, std::ios::binary);
-    std::wofstream destinationFileOne(destinationFilePath, std::ios::binary);
-    std::wcout << "Destination Directory: " << qDestination.toStdWString() << std::endl;
+    std::wofstream destinationFileOne(destinationFilePathOne, std::ios::binary);
+    std::wcout << "Destination Directory One: " << qDestinationOne.toStdWString() << std::endl;
 
     if (sourceFileOne && destinationFileOne)
     {
@@ -177,7 +200,7 @@ void MainWindow::copyFiles()
 
     // Copy fileTwoPath
     std::ifstream sourceFileTwo(fileTwoPath, std::ios::binary);
-    std::wofstream destinationFileTwo(destinationFilePath, std::ios::binary | std::ios::app); // Use append mode for the second file
+    std::wofstream destinationFileTwo(destinationFilePathTwo, std::ios::binary | std::ios::app); // Use append mode for the second file
 
     if (sourceFileTwo && destinationFileTwo)
     {

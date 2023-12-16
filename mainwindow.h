@@ -26,6 +26,8 @@ public:
 
     QString getSourcePath();
 
+    QString getNewDirectoryTwo();
+
 
 private slots:
     void on_pushButton_clicked();
