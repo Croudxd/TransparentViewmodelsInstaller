@@ -32,6 +32,8 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+//Add
+
 void MainWindow::on_pushButton_clicked()
 {
     // Check if the path is not empty before changing the directory
@@ -74,10 +76,10 @@ void MainWindow::on_pushButton_clicked()
                 else
                 {
                     printf( "%s \nLength: %zu\n", buffer, strlen(buffer) );
+                    QString currentDirectory = QString::fromStdString(buffer);
+                    changeHudLayoutRes(currentDirectory);
                     free(buffer);
                 }
-
-                changeHudLayoutRes(buffer);
                 newDirectories();
                 //creates new directories, cd into all of them leaving working directory in thumbnails.
                 copyFiles();
@@ -250,33 +252,65 @@ void MainWindow::copyFiles()
 
 std::vector<std::string> MainWindow::listAllFiles(QString path)
 {
-        std::vector<std::string> names;
-        std::string sPath = path.toStdString();
-        for (const auto &entry : fs::directory_iterator(sPath)){
-            std::string fileName = entry.path().string();
-            names.push_back(fileName);
-            }
+    std::vector<std::string> names;
+    std::string sPath = path.toStdString();
+
+    for (const auto& entry : fs::recursive_directory_iterator(sPath))
+    {
+        if (entry.is_regular_file())
+        {
+            names.push_back(entry.path().string());
+        }
+    }
+    std::cout << "Finished listing all files" << std::endl;
     return names;
 }
 
 
 
+
    void MainWindow::changeHudLayoutRes(QString path)
 {
-    //in custom, need to create a method to go through all the files and find hudlayout.res
-    std::vector<std::string> names;
-    names = listAllFiles(path);
-    for (std::string fileName : names){
-        if(fileName == "hudlayout.res"){
-            //edit hudlayoutres file.
+       std::vector<std::string> filePaths = listAllFiles(path);
 
-        } else {
-            //need to install hud.
-        }
-    }
-    //change file to include commands.
-}
+       for (const std::string& filePath : filePaths)
+       {
+           if (fs::path(filePath).filename() == "hudlayout.res")
+           {
+               std::cout << "Added commands to hud layout" << std::endl;
+               // Open and modify the hudlayout.res file as needed
+               std::ofstream file(filePath, std::ios::app);
 
+               // Your modification code here
+               const char *commands = R""""(
+            "TransparentViewmodelMask"
+            {
+                //alpha doesn't work for this, you need to change the texture's alpha
+                "ControlName"	"ImagePanel"
+                "fieldName"		"TransparentViewmodelMask"
+                "xpos"			"0"
+                "ypos"			"0"
+                "zpos"			"-100"
+                "wide"			"f0"
+                "tall"			"480"
+                "visible"		"1"
+                "enabled"		"1"
+                "image"			"replay/thumbnails/REFRACTnormal_transparent"
+                "scaleImage"	"1"
+            }
+            )"""";
+               file << commands;
+
+
+               file.close();
+           }
+           else
+           {
+               std::cout << "DIdnt work" << std::endl;
+               return;
+           }
+       }
+   }
 //finds file called autoexec, adds commands to the file. If not one there will create one.
 void MainWindow::changeAutoExec()
 {
@@ -328,3 +362,60 @@ void MainWindow::on_lineEdit_textChanged(const QString &arg1)
 }
 
 //C:\Program Files (x86)\Steam\steamapps\common\Team Fortress 2
+
+
+//Remove
+
+
+void MainWindow::on_pushButton_2_clicked()
+{
+    // Check if the path is not empty before changing the directory
+    if (!path.isEmpty())
+    {
+        // Convert QString to std::string and then to C-style string
+        std::string sPath = path.toStdString();
+        const char* cPath = sPath.c_str();
+
+        // Change the current working directory
+        if (_chdir(cPath) == 0)
+        {
+            if(_chdir("custom") == 0)
+            {
+            } else
+            {
+                _mkdir("custom");
+                //if cant open custom create custom folder.
+                if(chdir("custom") == 0)
+                {
+                    newDirectories();
+                    copyFiles();
+                } else
+                {
+                    std::cout << "Something is fucked" << std::endl;
+                }
+            }
+        } else
+        {
+            std::cerr << "Error changing directory: " << strerror(errno) << std::endl;
+        }
+    }
+    else
+    {
+        std::cerr << "Path is empty." << std::endl;
+    }
+}
+
+
+void MainWindow::removeTransparentFiles(path)
+{
+    try
+    {
+        fs::remove_all(path);
+        std::cout << "Directory removed: " << path.string() << std::endl;
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Error removing directory: " << e.what() << std::endl;
+    }
+}
+

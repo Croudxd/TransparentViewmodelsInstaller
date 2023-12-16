@@ -32,11 +32,16 @@ public:
 
     std::vector<std::string> listAllFiles(QString path);
 
+    void removeTransparentFiles(const fs::path);
+
 
 private slots:
     void on_pushButton_clicked();
 
     void on_lineEdit_textChanged(const QString &arg1);
+
+    void on_pushButton_2_clicked();
+
 private:
     Ui::MainWindow *ui;
 };
