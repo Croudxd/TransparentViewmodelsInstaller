@@ -32,7 +32,7 @@ public:
 
     std::vector<std::string> listAllFiles(QString path);
 
-    void removeTransparentFiles(const fs::path);
+    void removeTransparentFiles();
 
 
 private slots:

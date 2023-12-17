@@ -260,12 +260,12 @@ std::vector<std::string> MainWindow::listAllFiles(QString path)
         if (entry.is_regular_file())
         {
             names.push_back(entry.path().string());
+            std::cout << "Entry: " << entry;
         }
     }
     std::cout << "Finished listing all files" << std::endl;
     return names;
 }
-
 
 
 
@@ -275,35 +275,40 @@ std::vector<std::string> MainWindow::listAllFiles(QString path)
 
        for (const std::string& filePath : filePaths)
        {
-           if (fs::path(filePath).filename() == "hudlayout.res")
+           if (fs::path(filePath).filename() == "hudlayout.res") //this doesnt work and needs to be fixed.
            {
                std::cout << "Added commands to hud layout" << std::endl;
                // Open and modify the hudlayout.res file as needed
                std::ofstream file(filePath, std::ios::app);
 
-               // Your modification code here
-               const char *commands = R""""(
-            "TransparentViewmodelMask"
-            {
-                //alpha doesn't work for this, you need to change the texture's alpha
-                "ControlName"	"ImagePanel"
-                "fieldName"		"TransparentViewmodelMask"
-                "xpos"			"0"
-                "ypos"			"0"
-                "zpos"			"-100"
-                "wide"			"f0"
-                "tall"			"480"
-                "visible"		"1"
-                "enabled"		"1"
-                "image"			"replay/thumbnails/REFRACTnormal_transparent"
-                "scaleImage"	"1"
-            }
-            )"""";
-               file << commands;
+               if (file.is_open()){
+                   std::cout << "File opened can now write";
 
 
-               file.close();
-           }
+                       // Your modification code here
+                       const char *commands = R""""(
+                    "TransparentViewmodelMask"
+                    {
+                        //alpha doesn't work for this, you need to change the texture's alpha
+                        "ControlName"	"ImagePanel"
+                        "fieldName"		"TransparentViewmodelMask"
+                        "xpos"			"0"
+                        "ypos"			"0"
+                        "zpos"			"-100"
+                        "wide"			"f0"
+                        "tall"			"480"
+                        "visible"		"1"
+                        "enabled"		"1"
+                        "image"			"replay/thumbnails/REFRACTnormal_transparent"
+                        "scaleImage"	"1"
+                    }
+                    )"""";
+                       file << commands;
+
+
+                       file.close();
+               }
+                   }
            else
            {
                std::cout << "DIdnt work" << std::endl;
@@ -406,16 +411,16 @@ void MainWindow::on_pushButton_2_clicked()
 }
 
 
-void MainWindow::removeTransparentFiles(path)
+void MainWindow::removeTransparentFiles()
 {
-    try
-    {
-        fs::remove_all(path);
-        std::cout << "Directory removed: " << path.string() << std::endl;
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << "Error removing directory: " << e.what() << std::endl;
-    }
+    // try
+    // {
+    //     fs::remove_all(path);
+    //     std::cout << "Directory removed: " << path.string() << std::endl;
+    // }
+    // catch (const std::exception& e)
+    // {
+    //     std::cerr << "Error removing directory: " << e.what() << std::endl;
+    // }
 }
 
