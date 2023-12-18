@@ -22,7 +22,8 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
+    ui->setupUi(this),
+    this->setFixedSize(800,500);
 
     connect(ui->lineEdit, &QLineEdit::textChanged, this, &MainWindow::on_lineEdit_textChanged);
 
@@ -397,40 +398,7 @@ void MainWindow::on_lineEdit_textChanged(const QString &arg1)
 
 void MainWindow::on_pushButton_2_clicked()
 {
-    // Check if the path is not empty before changing the directory
-    if (!path.isEmpty())
-    {
-        // Convert QString to std::string and then to C-style string
-        std::string sPath = path.toStdString();
-        const char* cPath = sPath.c_str();
-
-        // Change the current working directory
-        if (_chdir(cPath) == 0)
-        {
-            if(_chdir("custom") == 0)
-            {
-            } else
-            {
-                _mkdir("custom");
-                //if cant open custom create custom folder.
-                if(chdir("custom") == 0)
-                {
-                    newDirectories();
-                    copyFiles();
-                } else
-                {
-                    std::cerr << "Something went wrong" << strerror(errno) << std::endl;
-                }
-            }
-        } else
-        {
-            std::cerr << "Error changing directory: " << strerror(errno) << std::endl;
-        }
-    }
-    else
-    {
-        std::cerr << "Path is empty." << std::endl;
-    }
+    removeTransparentFiles();
 }
 
 
@@ -501,7 +469,7 @@ void MainWindow::removeHudLayoutCommands(){
                 std::ofstream file(filePath, std::ios::app);
                 if (file.is_open())
                 {
-                    for(int i = 0; i < 15; i++){
+                    for(int i = 0; i < 17; i++){
                     deleteLastLine(filePath);
                     }
                     std::string deleteCommand = "}";
