@@ -3,6 +3,7 @@
 ### GUI/Script to add and remove transparent viewmodels in team fortress 2.
 
 Gives ease of access to add or remove instead of having to edit files every time.
+Built for windows machines.
 
 ### Developed in C++/Qt
 
