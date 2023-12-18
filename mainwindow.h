@@ -32,9 +32,16 @@ public:
 
     std::vector<std::string> listAllFiles(QString path);
 
+    void deleteLastLine(const std::string& filePath);
+
+    //REMOVING TRANSPARENT FUNCTIONS.
     void removeTransparentFiles();
 
-    void deleteLastLine(const std::string& filePath);
+    void removeAutoExecCommands();
+
+    void removeHudLayoutCommands();
+
+    void removeTransparentDirectory();
 
 
 

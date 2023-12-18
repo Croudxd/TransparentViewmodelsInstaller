@@ -381,6 +381,7 @@ void MainWindow::changeAutoExec()
 
 
 
+
 void MainWindow::on_lineEdit_textChanged(const QString &arg1)
 {
     //gets path from user.
@@ -433,16 +434,109 @@ void MainWindow::on_pushButton_2_clicked()
 }
 
 
-void MainWindow::removeTransparentFiles()
-{
-    // try
-    // {
-    //     fs::remove_all(path);
-    //     std::cout << "Directory removed: " << path.string() << std::endl;
-    // }
-    // catch (const std::exception& e)
-    // {
-    //     std::cerr << "Error removing directory: " << e.what() << std::endl;
-    // }
+
+
+void MainWindow::removeTransparentFiles(){
+    //use all functions below to complete remove transparent viewmodels.
+    removeAutoExecCommands();
+    removeHudLayoutCommands();
+    removeTransparentDirectory();
+
+}
+
+void MainWindow::removeAutoExecCommands(){
+    if (!path.isEmpty())
+    {
+        // Convert QString to std::string and then to C-style string
+        std::string sPath = path.toStdString();
+        const char* cPath = sPath.c_str();
+
+        // Change the current working directory
+        if (_chdir(cPath) == 0)
+        {
+            //In tf2 folder
+            _chdir("tf");
+            //in tf folder
+            if(_chdir("cfg") == 0)
+            {
+                const char* fileName = "autoexec.cfg";
+                std::ofstream outFile(fileName);
+                if(outFile.is_open())
+                {
+                    //change autoexec/add commands.
+                }
+                std::ifstream inFile(fileName);
+                if(inFile.is_open())
+                {
+                    deleteLastLine(fileName);
+                }
+                } else
+                    {
+                        std::cerr << "Error opening autoexec.cfg for writing." << std::endl;
+                    }
+
+                if(_chdir("..")==0)
+                {
+
+                }
+                //back to tf
+            } else
+            {
+                std::cerr << "Error changing directory: " << strerror(errno) << std::endl;
+            }
+    }
+}
+
+
+
+void MainWindow::removeHudLayoutCommands(){
+    std::vector<std::string> filePaths = listAllFiles(path);
+    if(_chdir("custom") == 0){
+
+        for (const std::string& filePath : filePaths)
+        {
+            if (fs::path(filePath).filename() == "HudLayout.res")
+            {
+                // Open and modify the hudlayout.res file as needed
+                std::ofstream file(filePath, std::ios::app);
+                if (file.is_open())
+                {
+                    for(int i = 0; i < 15; i++){
+                    deleteLastLine(filePath);
+                    }
+                    std::string deleteCommand = "}";
+                    file << deleteCommand;
+                    file.close();
+                    if(_chdir("..") ==0){
+
+                    } else {
+                        std::cerr << "Error changing back a directory" << std::endl;
+                    }
+
+                }
+                else
+                {
+                    std::cerr << "Error opening file: " << filePath << std::endl;
+                }
+
+                // If you found and modified the file, you might want to break out of the loop here.
+                // If you want to process all instances, remove the break statement.
+                break;
+            }
+        }
+    } else {
+        std::cerr << "Error finding custom folder: " << std::endl;
+    }
+}
+
+void MainWindow::removeTransparentDirectory(){
+if(_chdir("custom") == 0)
+    {
+        if(fs::remove_all("transparent") == true){
+            //delete transparent folders, good to go.
+        } else {
+            std::cerr << "Error transparent folders" << std::endl;
+        }
+    }
 }
 
