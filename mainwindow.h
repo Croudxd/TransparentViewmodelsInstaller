@@ -34,6 +34,9 @@ public:
 
     void removeTransparentFiles();
 
+    void deleteLastLine(const std::string& filePath);
+
+
 
 private slots:
     void on_pushButton_clicked();

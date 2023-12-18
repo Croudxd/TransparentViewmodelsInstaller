@@ -10,6 +10,7 @@
 #include <ostream>
 #include <string.h>
 #include <filesystem>
+#include <QMessageBox>
 
 namespace fs = std::filesystem;
 
@@ -56,9 +57,6 @@ void MainWindow::on_pushButton_clicked()
                 if(_chdir("..")==0)
                 {
 
-                } else
-                {
-                    std::cout << "Not going back a directory" << std::endl;
                 }
                 //back to tf
             } else
@@ -75,7 +73,6 @@ void MainWindow::on_pushButton_clicked()
                     perror( "_getcwd error" );
                 else
                 {
-                    printf( "%s \nLength: %zu\n", buffer, strlen(buffer) );
                     QString currentDirectory = QString::fromStdString(buffer);
                     changeHudLayoutRes(currentDirectory);
                     free(buffer);
@@ -92,9 +89,6 @@ void MainWindow::on_pushButton_clicked()
                 {
                     newDirectories();
                     copyFiles();
-                } else
-                {
-                    std::cout << "Something is fucked" << std::endl;
                 }
             }
         } else
@@ -156,8 +150,6 @@ QString MainWindow::getNewDirectoryTwo(){
         qPath = dir.filePath(directory);
         dir.cd(directory);
     }
-
-    std::wcout << qPath.toStdWString();
     return qPath;
 }
 
@@ -207,14 +199,12 @@ void MainWindow::copyFiles()
     // Copy fileOnePath
     std::ifstream sourceFileOne(fileOnePath, std::ios::binary);
     std::ofstream destinationFileOne(destinationFilePathOne, std::ios::binary);
-    std::wcout << "Destination Directory One: " << qDestinationOne.toStdWString() << std::endl;
 
     if (sourceFileOne && destinationFileOne)
     {
         destinationFileOne << sourceFileOne.rdbuf();
-        std::wcout << "File One copied successfully" << std::endl;
     } else {
-        std::wcout << "Failed to copy File One" << std::endl;
+        std::cerr << "Failed to copy File One" << std::endl;
     }
 
     // Copy fileTwoPath
@@ -224,10 +214,9 @@ void MainWindow::copyFiles()
     if (sourceFileTwo && destinationFileTwo)
     {
         destinationFileTwo << sourceFileTwo.rdbuf();
-        std::wcout << "File Two copied successfully" << std::endl;
     } else
     {
-        std::wcout << "Failed to copy File Two" << std::endl;
+        std::wcerr << "Failed to copy File Two" << std::endl;
     }
 
     if (sourceFileOne.fail() || destinationFileOne.fail())
@@ -260,62 +249,97 @@ std::vector<std::string> MainWindow::listAllFiles(QString path)
         if (entry.is_regular_file())
         {
             names.push_back(entry.path().string());
-            std::cout << "Entry: " << entry;
         }
     }
-    std::cout << "Finished listing all files" << std::endl;
     return names;
+}
+
+void MainWindow::deleteLastLine(const std::string& filePath)
+{
+    std::ifstream inputFile(filePath);
+    std::vector<std::string> lines;
+
+    if (inputFile.is_open())
+    {
+        std::string line;
+        while (std::getline(inputFile, line))
+        {
+            lines.push_back(line);
+        }
+        inputFile.close();
+
+        if (!lines.empty())
+        {
+            lines.pop_back();  // Remove the last line
+            std::ofstream outputFile(filePath, std::ios::trunc);
+
+            for (const std::string& newLine : lines)
+            {
+                outputFile << newLine << '\n';
+            }
+
+            outputFile.close();
+        }
+        else
+        {
+            std::cerr << "File is empty: " << filePath << std::endl;
+        }
+    }
+    else
+    {
+        std::cerr << "Error opening file: " << filePath << std::endl;
+    }
 }
 
 
 
    void MainWindow::changeHudLayoutRes(QString path)
 {
-       std::vector<std::string> filePaths = listAllFiles(path);
+    std::vector<std::string> filePaths = listAllFiles(path);
 
-       for (const std::string& filePath : filePaths)
-       {
-           if (fs::path(filePath).filename() == "hudlayout.res") //this doesnt work and needs to be fixed.
-           {
-               std::cout << "Added commands to hud layout" << std::endl;
-               // Open and modify the hudlayout.res file as needed
-               std::ofstream file(filePath, std::ios::app);
+    for (const std::string& filePath : filePaths)
+    {
+        if (fs::path(filePath).filename() == "HudLayout.res")
+        {
+            // Open and modify the hudlayout.res file as needed
+            std::ofstream file(filePath, std::ios::app);
+            if (file.is_open())
+            {
+                deleteLastLine(filePath);
+                // Your modification code here
+                const char *commands = R""""(
+    "TransparentViewmodelMask"
+    {
+        //alpha doesn't work for this, you need to change the texture's alpha
+        "ControlName"   "ImagePanel"
+        "fieldName"        "TransparentViewmodelMask"
+        "xpos"          "0"
+        "ypos"          "0"
+        "zpos"          "-100"
+        "wide"          "f0"
+        "tall"          "480"
+        "visible"       "1"
+        "enabled"       "1"
+        "image"            "replay/thumbnails/REFRACTnormal_transparent"
+        "scaleImage"    "1"
+    }
+}
+                )"""";
+                file << commands;
 
-               if (file.is_open()){
-                   std::cout << "File opened can now write";
+                file.close();
+            }
+            else
+            {
+                std::cerr << "Error opening file: " << filePath << std::endl;
+            }
 
-
-                       // Your modification code here
-                       const char *commands = R""""(
-                    "TransparentViewmodelMask"
-                    {
-                        //alpha doesn't work for this, you need to change the texture's alpha
-                        "ControlName"	"ImagePanel"
-                        "fieldName"		"TransparentViewmodelMask"
-                        "xpos"			"0"
-                        "ypos"			"0"
-                        "zpos"			"-100"
-                        "wide"			"f0"
-                        "tall"			"480"
-                        "visible"		"1"
-                        "enabled"		"1"
-                        "image"			"replay/thumbnails/REFRACTnormal_transparent"
-                        "scaleImage"	"1"
-                    }
-                    )"""";
-                       file << commands;
-
-
-                       file.close();
-               }
-                   }
-           else
-           {
-               std::cout << "DIdnt work" << std::endl;
-               return;
-           }
-       }
-   }
+            // If you found and modified the file, you might want to break out of the loop here.
+            // If you want to process all instances, remove the break statement.
+            break;
+        }
+    }
+}
 //finds file called autoexec, adds commands to the file. If not one there will create one.
 void MainWindow::changeAutoExec()
 {
@@ -345,8 +369,6 @@ void MainWindow::changeAutoExec()
             if (outFile.is_open())
             {
                 outFile << content;
-
-                std::cout << "Settings added to autoexec.cfg." << std::endl;
             } else
             {
                 std::cerr << "Error opening autoexec.cfg for writing." << std::endl;
@@ -396,7 +418,7 @@ void MainWindow::on_pushButton_2_clicked()
                     copyFiles();
                 } else
                 {
-                    std::cout << "Something is fucked" << std::endl;
+                    std::cerr << "Something went wrong" << strerror(errno) << std::endl;
                 }
             }
         } else
